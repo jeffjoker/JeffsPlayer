@@ -5,14 +5,19 @@ plugins {
 
 android {
     namespace = "com.example.jeffsplayer"
-    compileSdk = 34
+    compileSdk = 34 // or whatever your version is
 
     defaultConfig {
         applicationId = "com.example.jeffsplayer"
-        minSdk = 26
+        minSdk = 26 // Good target for Android TV
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
+        // Add this block to filter architectures and save memory:
+        ndk {
+            abiFilters.addAll(setOf("arm64-v8a", "armeabi-v7a"))
+        }
     }
 
     buildTypes {
