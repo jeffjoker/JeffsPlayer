@@ -33,5 +33,6 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.leanback:leanback:1.0.0")
-implementation("io.github.abdallahmehiz:mpv-android-lib:0.1.12")
+implementation("androidx.media3:media3-exoplayer:1.2.0")
+implementation("androidx.media3:media3-ui:1.2.0")
 }
