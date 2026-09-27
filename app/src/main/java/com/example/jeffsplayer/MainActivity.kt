@@ -1,45 +1,62 @@
 package com.example.jeffsplayer
 
 import android.os.Bundle
+import android.view.SurfaceHolder
+import android.view.SurfaceView
+import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
+import is.xyz.mpv.MPVLib
 
-class MainActivity : AppCompatActivity() {
-    private var player: ExoPlayer? = null
-    private lateinit var playerView: PlayerView
+class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
+    private lateinit var surfaceView: SurfaceView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        playerView = PlayerView(this)
-        setContentView(playerView)
+
+        surfaceView = SurfaceView(this)
+        val layout = FrameLayout(this).apply {
+            addView(surfaceView)
+        }
+        setContentView(layout)
+
+        surfaceView.holder.addCallback(this)
     }
 
-    override fun onStart() {
-        super.onStart()
-        initializePlayer()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        releasePlayer()
-    }
-
-    private fun initializePlayer() {
-        player = ExoPlayer.Builder(this).build().also { exoPlayer ->
-            playerView.player = exoPlayer
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        try {
+            // Initialize the native libmpv engine
+            MPVLib.create(applicationContext)
+            MPVLib.init()
             
-            val mediaItem = MediaItem.fromUri("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")
-            exoPlayer.setMediaItem(mediaItem)
-            exoPlayer.prepare()
-            exoPlayer.playWhenReady = true
+            // Attach the Android surface for hardware-accelerated video rendering
+            MPVLib.attachSurface(holder.surface)
+            MPVLib.setOptionString("config", "no")
+
+            // Play the sample video stream using mpv command
+            MPVLib.command(arrayOf("loadfile", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"))
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    private fun releasePlayer() {
-        player?.release()
-        player = null
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        // Handle surface dimension updates if needed
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        try {
+            MPVLib.detachSurface()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            MPVLib.destroy()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
