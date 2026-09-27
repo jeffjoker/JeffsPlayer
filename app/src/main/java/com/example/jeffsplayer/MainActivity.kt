@@ -5,7 +5,7 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
-import is.xyz.mpv.MPVLib
+import `is`.xyz.mpv.MPVLib
 
 class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private lateinit var surfaceView: SurfaceView
