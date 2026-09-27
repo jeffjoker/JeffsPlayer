@@ -24,15 +24,11 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         try {
-            // Initialize the native libmpv engine
-            MPVLib.create(applicationContext)
+            // Initialize libmpv with cache/config paths required by the native wrapper
+            MPVLib.create(this)
             MPVLib.init()
             
-            // Attach the Android surface for hardware-accelerated video rendering
             MPVLib.attachSurface(holder.surface)
-            MPVLib.setOptionString("config", "no")
-
-            // Play the sample video stream using mpv command
             MPVLib.command(arrayOf("loadfile", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"))
         } catch (e: Exception) {
             e.printStackTrace()
@@ -40,7 +36,8 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        // Handle surface dimension updates if needed
+        MPVLib.setPropertyInt("osd-wdt-size", width)
+        MPVLib.setPropertyInt("osd-height", height)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
