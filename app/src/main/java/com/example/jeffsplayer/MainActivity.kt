@@ -90,12 +90,10 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         surfaceView.holder.addCallback(this)
     }
 
-    override fun surfaceCreated(holder: SurfaceHolder) {
+   override fun surfaceCreated(holder: SurfaceHolder) {
         try {
             if (!isPlayerCreated) {
                 MPVLib.create(applicationContext)
-                // Set the config directory so libmpv doesn't crash on startup
-                MPVLib.setOptionString("config-dir", applicationContext.filesDir.path)
                 MPVLib.init()
                 isPlayerCreated = true
             }
