@@ -18,10 +18,13 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Create Gradle Wrapper (Version 8.5)
-      run: |
-        gradle wrapper --gradle-version 8.5 --distribution-type bin
-        chmod +x gradlew
+    - name: Setup Gradle 8.5 & Cache
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.5'
+
+    - name: Generate Gradle Wrapper
+      run: gradle wrapper --gradle-version 8.5 --distribution-type bin
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug
