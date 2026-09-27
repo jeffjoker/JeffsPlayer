@@ -1,25 +1,82 @@
 package com.example.jeffsplayer
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.widget.Button
+import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import `is`.xyz.mpv.MPVLib
 
 class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private lateinit var surfaceView: SurfaceView
+    private lateinit var urlEditText: EditText
+    private lateinit var playButton: Button
     private var isPlayerCreated = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        surfaceView = SurfaceView(this)
-        val layout = FrameLayout(this).apply {
-            addView(surfaceView)
-        }
-        setContentView(layout)
+        // Root container holding both video surface and UI controls
+        val rootLayout = FrameLayout(this)
 
+        // 1. SurfaceView for video playback (occupies the background)
+        surfaceView = SurfaceView(this)
+        rootLayout.addView(
+            surfaceView, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        // 2. Temporary URL Input Overlay at the top
+        val controlsLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(32, 32, 32, 32)
+            setBackgroundColor(Color.parseColor("#80000000")) // Semi-transparent dark background
+        }
+
+        urlEditText = EditText(this).apply {
+            hint = "Enter http:// stream URL"
+            setText("http://")
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.LTGRAY)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginEnd = 16
+            }
+        }
+
+        playButton = Button(this).apply {
+            text = "Play"
+            setOnClickListener {
+                val url = urlEditText.text.toString().trim()
+                if (url.isNotEmpty()) {
+                    try {
+                        MPVLib.command(arrayOf("loadfile", url))
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+
+        controlsLayout.addView(urlEditText)
+        controlsLayout.addView(playButton)
+
+        rootLayout.addView(
+            controlsLayout, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.TOP
+            }
+        )
+
+        setContentView(rootLayout)
         surfaceView.holder.addCallback(this)
     }
 
@@ -30,11 +87,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 MPVLib.init()
                 isPlayerCreated = true
             }
-            
             MPVLib.attachSurface(holder.surface)
-            
-            // Load a test video stream
-            MPVLib.command(arrayOf("loadfile", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"))
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -55,11 +108,6 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        // Optional: pause or handle background state if needed
     }
 
     override fun onDestroy() {
