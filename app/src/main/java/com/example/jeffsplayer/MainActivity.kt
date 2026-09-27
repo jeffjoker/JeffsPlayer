@@ -9,6 +9,7 @@ import `is`.xyz.mpv.MPVLib
 
 class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private lateinit var surfaceView: SurfaceView
+    private var isPlayerCreated = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,10 +25,15 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         try {
-            MPVLib.create(applicationContext)
-            MPVLib.init()
+            if (!isPlayerCreated) {
+                MPVLib.create(applicationContext)
+                MPVLib.init()
+                isPlayerCreated = true
+            }
             
             MPVLib.attachSurface(holder.surface)
+            
+            // Load a test video stream
             MPVLib.command(arrayOf("loadfile", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"))
         } catch (e: Exception) {
             e.printStackTrace()
@@ -51,12 +57,20 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        // Optional: pause or handle background state if needed
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        try {
-            MPVLib.destroy()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        if (isPlayerCreated) {
+            try {
+                MPVLib.destroy()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            isPlayerCreated = false
         }
     }
 }
