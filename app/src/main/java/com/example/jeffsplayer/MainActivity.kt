@@ -24,8 +24,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         try {
-            // Initialize libmpv with cache/config paths required by the native wrapper
-            MPVLib.create(this)
+            MPVLib.create(applicationContext)
             MPVLib.init()
             
             MPVLib.attachSurface(holder.surface)
@@ -36,8 +35,12 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        MPVLib.setPropertyInt("osd-wdt-size", width)
-        MPVLib.setPropertyInt("osd-height", height)
+        try {
+            MPVLib.setPropertyInt("osd-wdt-size", width)
+            MPVLib.setPropertyInt("osd-height", height)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
