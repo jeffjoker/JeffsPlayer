@@ -94,6 +94,8 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         try {
             if (!isPlayerCreated) {
                 MPVLib.create(applicationContext)
+                // Set the config directory so libmpv doesn't crash on startup
+                MPVLib.setOptionString("config-dir", applicationContext.filesDir.path)
                 MPVLib.init()
                 isPlayerCreated = true
             }
