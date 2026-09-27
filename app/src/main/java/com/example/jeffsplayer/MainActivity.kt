@@ -45,6 +45,17 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
             setText("http://")
             setTextColor(Color.WHITE)
             setHintTextColor(Color.LTGRAY)
+            isFocusable = true
+            isFocusableInTouchMode = true
+            
+            // Force the virtual keyboard to pop up when the text box gains focus on TV
+            setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                    imm.showSoftInput(this, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
+            
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
                 marginEnd = 16
             }
