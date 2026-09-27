@@ -48,10 +48,9 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
             isFocusable = true
             isFocusableInTouchMode = true
             
-            // Force the virtual keyboard to pop up when the text box gains focus on TV
             setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
-                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                    val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
                     imm.showSoftInput(this, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
                 }
             }
