@@ -16,7 +16,7 @@ android {
 
         // Add this block to filter architectures and save memory:
         ndk {
-            abiFilters.addAll(setOf("arm64-v8a", "armeabi-v7a"))
+            abiFilters.addAll("arm64-v8a")
         }
     }
 
