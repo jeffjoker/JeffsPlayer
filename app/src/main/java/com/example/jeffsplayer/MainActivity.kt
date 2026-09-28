@@ -2,17 +2,18 @@ package com.example.jeffsplayer
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.Gravity
+import android.view.KeyEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import `is`.xyz.mpv.MPVLib
+import is.xyz.mpv.MPVLib
 
 class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
+
     private lateinit var surfaceView: SurfaceView
     private lateinit var urlEditText: EditText
     private lateinit var playButton: Button
@@ -21,81 +22,79 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Root container holding both video surface and UI controls
-        val rootLayout = FrameLayout(this)
-
-        // 1. SurfaceView for video playback (occupies the background)
-        surfaceView = SurfaceView(this)
-        rootLayout.addView(
-            surfaceView, FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
+        // Root container for video rendering and control overlay
+        val rootLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
-        )
+            setBackgroundColor(Color.BLACK)
+        }
 
-        // 2. Temporary URL Input Overlay at the top
-        val controlsLayout = LinearLayout(this).apply {
+        // SurfaceView where libmpv renders frames
+        surfaceView = SurfaceView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+            )
+            holder.addCallback(this@MainActivity)
+        }
+        rootLayout.addView(surfaceView)
+
+        // Control layout optimized for Android TV D-pad navigation
+        val controlLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
             setPadding(32, 32, 32, 32)
-            setBackgroundColor(Color.parseColor("#80000000")) // Semi-transparent dark background
         }
 
         urlEditText = EditText(this).apply {
-            hint = "Enter http:// stream URL"
-            setText("http://")
+            hint = "Enter HTTP Stream URL"
             setTextColor(Color.WHITE)
-            setHintTextColor(Color.LTGRAY)
+            setHintTextColor(Color.GRAY)
             isFocusable = true
             isFocusableInTouchMode = true
-            
-            setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) {
-                    val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                    imm.showSoftInput(this, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
-                }
-            }
-            
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginEnd = 16
-            }
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                1f
+            )
         }
+        controlLayout.addView(urlEditText)
 
         playButton = Button(this).apply {
             text = "Play"
+            isFocusable = true
+            isFocusableInTouchMode = true
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
             setOnClickListener {
-                val url = urlEditText.text.toString().trim()
-                if (url.isNotEmpty()) {
-                    try {
-                        MPVLib.command(arrayOf("loadfile", url))
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                val streamUrl = urlEditText.text.toString().trim()
+                if (streamUrl.isNotEmpty()) {
+                    // Send load command to libmpv
+                    MPVLib.command(arrayOf("loadfile", streamUrl))
                 }
             }
         }
+        controlLayout.addView(playButton)
 
-        controlsLayout.addView(urlEditText)
-        controlsLayout.addView(playButton)
-
-        rootLayout.addView(
-            controlsLayout, FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.TOP
-            }
-        )
-
+        rootLayout.addView(controlLayout)
         setContentView(rootLayout)
-        surfaceView.holder.addCallback(this)
     }
 
-  override fun surfaceCreated(holder: SurfaceHolder) {
+    override fun surfaceCreated(holder: SurfaceHolder) {
         try {
             if (!isPlayerCreated) {
                 MPVLib.create(applicationContext)
                 
-                // Point libmpv to the app's sandbox files directory to prevent startup crash
+                // Point libmpv to the internal files directory to prevent startup crash
                 MPVLib.setOptionString("config-dir", applicationContext.filesDir.path)
                 
                 MPVLib.init()
@@ -108,12 +107,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        try {
-            MPVLib.setPropertyInt("osd-wdt-size", width)
-            MPVLib.setPropertyInt("osd-height", height)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        // Handle size/format changes if needed
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
@@ -124,15 +118,17 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if (isPlayerCreated) {
-            try {
-                MPVLib.destroy()
-            } catch (e: Exception) {
-                e.printStackTrace()
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Int {
+        when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> {
+                MPVLib.command(arrayOf("cycle", "pause"))
+                return true
             }
-            isPlayerCreated = false
+            KeyEvent.KEYCODE_MEDIA_STOP -> {
+                MPVLib.command(arrayOf("stop"))
+                return true
+            }
         }
+        return super.onKeyDown(keyCode, event)
     }
 }
