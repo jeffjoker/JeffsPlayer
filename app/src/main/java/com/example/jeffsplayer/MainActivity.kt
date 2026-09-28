@@ -10,7 +10,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import is.xyz.mpv.MPVLib
+import `is`.xyz.mpv.MPVLib
 
 class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
@@ -78,7 +78,6 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
             setOnClickListener {
                 val streamUrl = urlEditText.text.toString().trim()
                 if (streamUrl.isNotEmpty()) {
-                    // Send load command to libmpv
                     MPVLib.command(arrayOf("loadfile", streamUrl))
                 }
             }
@@ -93,10 +92,8 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         try {
             if (!isPlayerCreated) {
                 MPVLib.create(applicationContext)
-                
                 // Point libmpv to the internal files directory to prevent startup crash
                 MPVLib.setOptionString("config-dir", applicationContext.filesDir.path)
-                
                 MPVLib.init()
                 isPlayerCreated = true
             }
@@ -118,7 +115,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Int {
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> {
                 MPVLib.command(arrayOf("cycle", "pause"))
