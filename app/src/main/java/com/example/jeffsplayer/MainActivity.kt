@@ -88,18 +88,10 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         setContentView(rootLayout)
     }
 
-  override fun surfaceCreated(holder: SurfaceHolder) {
+ override fun surfaceCreated(holder: SurfaceHolder) {
         try {
             if (!isPlayerCreated) {
-                // Ensure the config/cache directories exist in the app sandbox
-                val configDir = applicationContext.filesDir.path
-                
                 MPVLib.create(applicationContext)
-                
-                // Pass standard initialization properties required by the C-core
-                MPVLib.setOptionString("config", "yes")
-                MPVLib.setOptionString("config-dir", configDir)
-                
                 MPVLib.init()
                 isPlayerCreated = true
             }
