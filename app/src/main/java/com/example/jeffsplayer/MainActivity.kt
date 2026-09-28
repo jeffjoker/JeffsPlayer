@@ -88,14 +88,14 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         setContentView(rootLayout)
     }
 
-   override fun surfaceCreated(holder: SurfaceHolder) {
+  override fun surfaceCreated(holder: SurfaceHolder) {
         try {
             if (!isPlayerCreated) {
-                MPVLib.create(applicationContext)
-                MPVLib.init()
+                // MPVLib.create(applicationContext)
+                // MPVLib.init()
                 isPlayerCreated = true
             }
-            MPVLib.attachSurface(holder.surface)
+            // MPVLib.attachSurface(holder.surface)
         } catch (e: Exception) {
             e.printStackTrace()
         }
